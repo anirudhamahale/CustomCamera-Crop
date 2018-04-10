@@ -19,7 +19,7 @@
         <!--Camera View Controller-->
         <scene sceneID="WGO-mm-sXr">
             <objects>
-                <viewController storyboardIdentifier="CameraViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="czQ-Ps-2pg" customClass="CameraViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="CameraViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="czQ-Ps-2pg" customClass="CameraViewController" customModule="CustomCameraView" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="6fP-1U-Ip4"/>
                         <viewControllerLayoutGuide type="bottom" id="iXK-OY-GCD"/>

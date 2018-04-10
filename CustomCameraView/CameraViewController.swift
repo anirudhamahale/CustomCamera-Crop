@@ -85,14 +85,14 @@ class CameraViewController: UIViewController {
         
         if #available(iOS 10.0, *) {
             let availableDevices = AVCaptureDevice.DiscoverySession(deviceTypes: [AVCaptureDevice.DeviceType.builtInWideAngleCamera], mediaType: AVMediaType.video, position: .back).devices
-            self.assignCamera(availableDevices)
+            assignCamera(availableDevices)
         } else {
             // Fallback on earlier versions
             // development, need to test this on iOS 8
             if let availableDevices = AVCaptureDevice.default(for: AVMediaType.video) {
-                self.assignCamera([availableDevices])
+                assignCamera([availableDevices])
             } else {
-                self.showAlert()
+                showAlert()
             }
         }
     }
@@ -105,7 +105,7 @@ class CameraViewController: UIViewController {
             captureDevice = availableDevices.first
             beginSession()
         } else {
-            self.showAlert()
+            showAlert()
         }
     }
     
@@ -118,19 +118,18 @@ class CameraViewController: UIViewController {
             print(error.localizedDescription)
         }
         
-        let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        self.previewLayer = previewLayer
-        self.cameraPreviewView.layer.addSublayer(self.previewLayer)
-        self.previewLayer.frame = self.view.layer.frame
-        self.previewLayer.frame.origin.y = +self.cameraPreviewView.frame.origin.y
-        (self.previewLayer as! AVCaptureVideoPreviewLayer).videoGravity = AVLayerVideoGravity.resizeAspectFill
-        self.previewLayer.masksToBounds = true
-        self.cameraPreviewView.clipsToBounds = true
+        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        cameraPreviewView.layer.addSublayer(previewLayer)
+        previewLayer.frame = view.layer.frame
+        previewLayer.frame.origin.y = +cameraPreviewView.frame.origin.y
+        (previewLayer as! AVCaptureVideoPreviewLayer).videoGravity = AVLayerVideoGravity.resizeAspectFill
+        previewLayer.masksToBounds = true
+        cameraPreviewView.clipsToBounds = true
         captureSession.startRunning()
-        
-        self.view.bringSubview(toFront: self.cameraPreviewView)
-        self.view.bringSubview(toFront: self.cameraButtonView)
-        self.view.bringSubview(toFront: self.guidesView)
+    
+        view.bringSubview(toFront: cameraPreviewView)
+        view.bringSubview(toFront: cameraButtonView)
+        view.bringSubview(toFront: guidesView)
         
         let dataOutput = AVCaptureVideoDataOutput()
         dataOutput.videoSettings = [((kCVPixelBufferPixelFormatTypeKey as NSString) as String):NSNumber(value:kCVPixelFormatType_32BGRA)]
@@ -171,11 +170,11 @@ class CameraViewController: UIViewController {
     
     /// This function will destroy the capture session.
     func stopCaptureSession() {
-        self.captureSession.stopRunning()
+        captureSession.stopRunning()
         
         if let inputs = captureSession.inputs as? [AVCaptureDeviceInput] {
             for input in inputs {
-                self.captureSession.removeInput(input)
+                captureSession.removeInput(input)
             }
         }
     }
@@ -198,6 +197,17 @@ class CameraViewController: UIViewController {
             let vc = segue.destination as! ShowImageViewController
             vc.image = sender as! UIImage
         }
+    }
+    
+    func takeScreenShot() -> UIImage {
+        previewLayer.setNeedsDisplay()
+        UIGraphicsBeginImageContextWithOptions(view.bounds.size, true, 0.0)
+        let context = UIGraphicsGetCurrentContext()!
+        view.layer.render(in: context)
+        previewLayer.render(in: context)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image!
     }
 }
 
@@ -227,13 +237,13 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
                 orientation = .up
             }
             
-            if let image = self.getImageFromSampleBuffer(buffer: sampleBuffer, orientation: orientation) {
-                DispatchQueue.main.async {
-                    let newImage = image.imageByCropToRect(rect: self.guideImageView.frame, scale: true)
-                    self.stopCaptureSession()
-                    self.previewLayer.removeFromSuperlayer()
-                    self.performSegue(withIdentifier: "showImage", sender: newImage)
-                }
+            DispatchQueue.main.async {
+                let newImage = self.takeScreenShot()
+                
+                // let newImage = image.imageByCropToRect(rect: self.guideImageView.frame, scale: true)
+                self.stopCaptureSession()
+                self.previewLayer.removeFromSuperlayer()
+                self.performSegue(withIdentifier: "showImage", sender: newImage)
             }
         }
     }
